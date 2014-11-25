@@ -1,6 +1,9 @@
 package io.github.binaryfoo.isotools
 
 import org.jetbrains.spek.api.Spek
+import kotlin.test.assertEquals
+import org.hamcrest.MatcherAssert.assertThat;
+import org.hamcrest.Matchers.hasItem;
 
 class LogEntryTest: Spek() {{
 
@@ -8,8 +11,8 @@ class LogEntryTest: Spek() {{
         on("reading") {
             it("should extract id and value") {
                 val attributes = extractAttributes("""<field id="7" value="1124000003"/>""")
-                test.assertEquals("7", attributes["id"])
-                test.assertEquals("1124000003", attributes["value"])
+                assertEquals("7", attributes["id"])
+                assertEquals("1124000003", attributes["value"])
             }
         }
     }
@@ -36,19 +39,77 @@ class LogEntryTest: Spek() {{
         on("reading") {
             val entry = fromLines(record.split('\n'))
             it("should extract the fields") {
-                test.assertEquals("1124000003", entry["7"])
-                test.assertEquals("28928", entry["11"])
-                test.assertEquals("a subfield", entry["48.1"])
-                test.assertEquals("subfield 48.2.13", entry["48.2.13"])
+                assertEquals("1124000003", entry["7"])
+                assertEquals("28928", entry["11"])
+                assertEquals("a subfield", entry["48.1"])
+                assertEquals("subfield 48.2.13", entry["48.2.13"])
             }
 
             it("should extract the timestamp") {
-                test.assertEquals(timestamp, entry.at)
+                assertEquals(timestamp, entry.at)
             }
 
             it("should extract the realm") {
-                test.assertEquals(realm, entry.realm)
+                assertEquals(realm, entry.realm)
+            }
+
+            it("root attributes are accessible using []") {
+                assertEquals(timestamp, entry["at"])
+                assertEquals(realm, entry["realm"])
             }
         }
     }
-}}
+
+    given("a list of log entries") {
+        val entry1 = entry("11" to "123456", "2" to "pan1", "37" to "123456001", "41" to "1")
+        val entry2 = entry("11" to "123457", "2" to "pan1", "37" to "123456002", "41" to "2")
+        val entry3 = entry("11" to "123458", "2" to "pan1", "37" to "123456003", "41" to "1")
+        val list = listOf(
+                entry1,
+                entry2,
+                entry3
+        )
+        on("filtering") {
+            it("matches by a single field") {
+                val filtered = list.filter(setOf("11" to "123456"))
+                assertEquals(listOf(entry1), filtered)
+            }
+            it("matches by two fields") {
+                val filtered = list.filter(setOf("2" to "pan1", "41" to "1"))
+                assertEquals(listOf(entry1, entry3), filtered)
+            }
+        }
+    }
+
+    given("a list of intermingled (request, response) pairs") {
+        val auth1 = entry("0" to "0200", "11" to "1")
+        val auth1Response = entry("0" to "0210", "11" to "1", "39" to "00")
+        val list = listOf(
+                auth1,
+                entry("0" to "0200", "11" to "2"),
+                entry("0" to "0820", "11" to "3"),
+                auth1Response,
+                entry("0" to "0820", "11" to "4"),
+                entry("0" to "0830", "11" to "3"),
+                entry("0" to "0210", "11" to "2", "39" to "01"),
+                entry("0" to "0200", "11" to "5")
+        )
+        on("matching responses to requests") {
+            val pairing = list.pairRequestWithResponse()
+            it("matches a 0210 to a 0200") {
+                assertThat(pairing, hasItem(EntryPair(auth1, auth1Response)))
+            }
+            it("can be flattened to .csv output") {
+                val csv = pairing.toCsv("0", "11", "39")
+                assertEquals("""0200,1,00
+0820,3,null
+0200,2,01""", csv)
+            }
+        }
+    }
+
+}
+    private fun entry(vararg values: Pair<String, String>) = LogEntry(mapOf(*values))
+}
+
+

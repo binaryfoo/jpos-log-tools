@@ -3,7 +3,7 @@ package io.github.binaryfoo.isotools
 import java.io.File
 import java.util.ArrayList
 
-class IsoReader {
+public class IsoReader {
 
     public fun read(f: File): List<LogEntry> {
         var entries: MutableList<List<String>> = ArrayList()
@@ -18,9 +18,12 @@ class IsoReader {
             }
             if (line.startsWith("</log>")) {
                 entries.add(record)
+                record = ArrayList()
                 inRecord = false
             }
         }
-        return entries.map { fromLines(it) }
+        return entries.map {
+            fromLines(it)
+        }
     }
 }
