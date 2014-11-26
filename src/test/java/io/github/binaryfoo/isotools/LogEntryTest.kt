@@ -4,6 +4,7 @@ import org.jetbrains.spek.api.Spek
 import kotlin.test.assertEquals
 import org.hamcrest.MatcherAssert.assertThat;
 import org.hamcrest.Matchers.hasItem;
+import org.joda.time.DateTime
 
 class LogEntryTest: Spek() {{
 
@@ -18,7 +19,7 @@ class LogEntryTest: Spek() {{
     }
 
     given("a whole a log record") {
-        val timestamp = "Mon Nov 24 00:00:03 EST 2014.292"
+        val timestamp = "Mon Nov 24 16:59:03 EST 2014.292"
         val realm = "some.channel/10.0.0.1:4321"
         val record = """<log realm="$realm" at="$timestamp" lifespan="10005ms">
   <receive>
@@ -43,6 +44,14 @@ class LogEntryTest: Spek() {{
                 assertEquals("28928", entry["11"])
                 assertEquals("a subfield", entry["48.1"])
                 assertEquals("subfield 48.2.13", entry["48.2.13"])
+            }
+
+            it("should extract the 'at' attribtue") {
+                assertEquals(timestamp, entry.at)
+            }
+
+            it("parse the 'at' attribtue into a timestamp") {
+                assertEquals(DateTime(2014, 11, 24, 16, 59, 3, 292), entry.timestamp)
             }
 
             it("should extract the timestamp") {
@@ -108,8 +117,32 @@ class LogEntryTest: Spek() {{
         }
     }
 
+    given("a (request, response) pair") {
+        val reversal1 = entry("""<log at="Mon Nov 17 00:00:03 EST 2014.292">
+    <isomsg>
+        <field id="0" value="0420"/>
+        <field id="11" value="131415"/>
+    </isomsg>
+</log>""")
+        val reversal1Response = entry("""<log at="Mon Nov 17 00:00:04 EST 2014.301">
+    <isomsg>
+        <field id="0" value="0430"/>
+        <field id="11" value="131415"/>
+    </isomsg>
+</log>""")
+        val list = listOf(reversal1, reversal1Response)
+        on("matching") {
+            val pairing = list.pairRequestWithResponse()
+            it("can determine the round trip time") {
+                assertEquals(1009L, pairing[0].rtt)
+            }
+        }
+    }
+
 }
     private fun entry(vararg values: Pair<String, String>) = LogEntry(mapOf(*values))
+
+    private fun entry(e: String) = fromLines(e.split('\n'))
 }
 
 

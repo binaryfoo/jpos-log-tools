@@ -6,17 +6,30 @@ import java.util.ArrayList
 import kotlin.properties.Delegates
 import java.util.HashSet
 import java.util.HashMap
+import org.joda.time.LocalTime
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormatter
+import org.joda.time.format.DateTimeFormat
 
 public data class LogEntry(private val _fields: Map<String, String>,
                            public val rootAttributes: Map<String, String> = mapOf()) {
 
     public fun get(idPath: String): String? {
-        val v = _fields[idPath]
-        return v ?: rootAttributes[idPath]
+        return if (idPath == "timestamp") {
+            timestamp.toString("yyyy-MM-dd HH:mm:ss.SSS")
+        } else if (idPath == "time") {
+            timestamp.toString("HH:mm:ss.SSS")
+        } else {
+            val v = _fields[idPath]
+            v ?: rootAttributes[idPath]
+        }
     }
 
     public val at: String by Delegates.mapVal(rootAttributes)
     public val realm: String by Delegates.mapVal(rootAttributes)
+    public val timestamp: DateTime by Delegates.lazy {
+        parseTimestamp(at)
+    }
 
     public val fields: Set<Pair<String, String>> by Delegates.lazy {
         HashSet(_fields.map { Pair(it.key, it.value) })
@@ -40,7 +53,7 @@ public fun fromLines(lines: Stream<String>): LogEntry {
             val id = attributes["id"]!!
             val value = attributes["value"]!!
             fields.put(path.endingAt(id), value)
-        } else if (it.contains("<isomsg ")) {
+        } else if (it.contains("<isomsg ") || it.contains("<isomsg>")) {
             val id = attributes["id"]
             if (id != null) {
                 path.add(id)
