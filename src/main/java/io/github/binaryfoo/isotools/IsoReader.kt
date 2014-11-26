@@ -15,11 +15,15 @@ public class IsoReader {
         }
     }
 
+    public fun read(vararg f: File): List<LogEntry> = read(listOf(*f))
+
+    public fun read(files: List<File>): List<LogEntry> = files.flatMap { read(it) }
+
     public fun readStdinOrFiles(args: Array<String>, first: Int = 1): List<LogEntry> {
         return if (args.size == first) {
             read(System.`in`)
         } else {
-            readAll(args.toList().subList(first, args.lastIndex + first).map { File(it) })
+            read(args.toList().subList(first, args.lastIndex + 1).map { File(it) })
         }
     }
 
@@ -44,6 +48,4 @@ public class IsoReader {
             fromLines(it)
         }
     }
-
-    public fun readAll(files: List<File>): List<LogEntry> = files.flatMap { read(it) }
 }

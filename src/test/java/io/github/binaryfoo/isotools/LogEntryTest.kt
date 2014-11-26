@@ -138,6 +138,14 @@ class LogEntryTest: Spek() {{
             it("can determine the round trip time") {
                 assertEquals(1009L, pairing[0].rtt)
             }
+            it("can be converted into a map with only some fields") {
+                val m = pairing[0].toFields("11", "rtt")
+                assertEquals(mapOf("11" to "131415", "rtt" to "1009"), m)
+            }
+            it("can be converted into csv with only some fields") {
+                val m = pairing[0].toFields("time", "11", "rtt")
+                assertEquals("00:00:03.292,131415,1009", m.toCsv())
+            }
         }
     }
 
