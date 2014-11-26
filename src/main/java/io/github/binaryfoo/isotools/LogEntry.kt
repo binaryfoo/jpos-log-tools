@@ -11,6 +11,9 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormatter
 import org.joda.time.format.DateTimeFormat
 
+/**
+ * Represents a &lt;log&gt; element in a jPos log file.
+ */
 public data class LogEntry(private val _fields: Map<String, String>,
                            public val rootAttributes: Map<String, String> = mapOf()) {
 

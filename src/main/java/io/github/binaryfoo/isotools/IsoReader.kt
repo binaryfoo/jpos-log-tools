@@ -15,6 +15,14 @@ public class IsoReader {
         }
     }
 
+    public fun readStdinOrFiles(args: Array<String>, first: Int = 1): List<LogEntry> {
+        return if (args.size == first) {
+            read(System.`in`)
+        } else {
+            readAll(args.toList().subList(first, args.lastIndex + first).map { File(it) })
+        }
+    }
+
     public fun read(input: InputStream): List<LogEntry> {
         var entries: MutableList<List<String>> = ArrayList()
         var inRecord = false
