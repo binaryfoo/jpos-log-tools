@@ -14,6 +14,8 @@ public fun main(args: Array<String>) {
     } else {
         reader.readAll(args.toList().subList(1, args.lastIndex + 1).map { File(it) })
     }
-    val csv = entries.pairRequestWithResponse().filter { it.mti == "0200" && it.rtt > 500 }.toCsv(args.first().split(',').toList())
+    val csv = entries.pairRequestWithResponse()
+            .filter { it.mti == "0200" && it.rtt > 500 }
+            .toCsv(args.first().split(',').toList())
     print(csv)
 }
