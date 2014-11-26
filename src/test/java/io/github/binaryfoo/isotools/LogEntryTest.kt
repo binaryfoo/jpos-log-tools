@@ -33,6 +33,7 @@ class LogEntryTest: Spek() {{
         <isomsg id="2">
           <field id="13" value="subfield 48.2.13"/>
         </isomsg>
+        <field id="3" value=""/>
       </isomsg>
     </isomsg>
   </receive>
@@ -44,6 +45,7 @@ class LogEntryTest: Spek() {{
                 assertEquals("28928", entry["11"])
                 assertEquals("a subfield", entry["48.1"])
                 assertEquals("subfield 48.2.13", entry["48.2.13"])
+                assertEquals("", entry["48.3"])
             }
 
             it("should extract the 'at' attribtue") {

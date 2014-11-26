@@ -2,14 +2,24 @@ package io.github.binaryfoo.isotools
 
 import java.io.File
 import java.util.ArrayList
+import java.io.BufferedReader
+import java.io.FileReader
+import java.io.InputStream
+import java.io.FileInputStream
 
 public class IsoReader {
 
     public fun read(f: File): List<LogEntry> {
+        return FileInputStream(f).use {
+            read(it)
+        }
+    }
+
+    public fun read(input: InputStream): List<LogEntry> {
         var entries: MutableList<List<String>> = ArrayList()
         var inRecord = false
         var record: MutableList<String> = ArrayList()
-        f.readLines().forEach { line ->
+        for (line in BufferedReader(input.reader()).lines()) {
             if (line.startsWith("<log ")) {
                 inRecord = true
             }
@@ -26,4 +36,6 @@ public class IsoReader {
             fromLines(it)
         }
     }
+
+    public fun readAll(files: List<File>): List<LogEntry> = files.flatMap { read(it) }
 }

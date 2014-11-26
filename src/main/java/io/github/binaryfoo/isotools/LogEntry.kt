@@ -50,8 +50,12 @@ public fun fromLines(lines: Stream<String>): LogEntry {
     lines.forEach {
         val attributes = extractAttributes(it)
         if (it.contains("<field")) {
-            val id = attributes["id"]!!
-            val value = attributes["value"]!!
+            val id = attributes["id"]
+            if (id == null)
+                throw IllegalArgumentException("Missing id in field $it")
+            val value = attributes["value"]
+            if (value == null)
+                throw IllegalArgumentException("Missing value in field $it")
             fields.put(path.endingAt(id), value)
         } else if (it.contains("<isomsg ") || it.contains("<isomsg>")) {
             val id = attributes["id"]
@@ -70,7 +74,7 @@ public fun fromLines(lines: Stream<String>): LogEntry {
     return LogEntry(fields, rootAttributes!!)
 }
 
-private val ID_VAL_PATTERN = Pattern.compile("(\\w+)=\"([^\"]+)\"")
+private val ID_VAL_PATTERN = Pattern.compile("(\\w+)=\"([^\"]*)\"")
 
 fun extractAttributes(line: String): Map<String, String> {
     val attrs = LinkedHashMap<String, String>()

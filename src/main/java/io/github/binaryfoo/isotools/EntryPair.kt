@@ -14,8 +14,11 @@ public data class EntryPair(public val request: LogEntry?, public val response: 
         }
     }
 
-    public val rtt: Long?
-    get() = if (request != null && response != null) response!!.timestamp.getMillis() - request!!.timestamp.getMillis() else null
+    public val rtt: Long
+        get() = if (request != null && response != null) response!!.timestamp.getMillis() - request!!.timestamp.getMillis() else -1
+
+    public val mti: String
+        get() = request?.get("0") ?: ""
 }
 
 public fun toFields(vararg ids: String): (EntryPair) -> List<Pair<String, String?>> {
@@ -24,13 +27,15 @@ public fun toFields(vararg ids: String): (EntryPair) -> List<Pair<String, String
     }
 }
 
-public fun toFieldValues(vararg ids: String): (EntryPair) -> List<String?> {
+public fun toFieldValues(ids: List<String>): (EntryPair) -> List<String?> {
     return { p ->
         ids.map { id -> p[id] }
     }
 }
 
-public fun List<EntryPair>.toCsv(vararg ids: String): String {
-    val reducedPairs: List<List<String?>> = this.map(toFieldValues(*ids))
+public fun List<EntryPair>.toCsv(vararg ids: String): String = toCsv(listOf(*ids))
+
+public fun List<EntryPair>.toCsv(ids: List<String>): String {
+    val reducedPairs: List<List<String?>> = this.map(toFieldValues(ids))
     return reducedPairs.map { it.joinToString(",") }.join("\n")
 }
