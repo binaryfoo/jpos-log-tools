@@ -102,7 +102,7 @@ public fun List<LogEntry>.pairRequestWithResponse(): List<EntryPair> {
     forEach { e ->
         val mti = e["0"]
         if (mti != null) {
-            val key = normaliseToRequestMTI(mti) + "-" + e["11"]
+            val key = normaliseToRequestMTI(mti) + "-" + e["11"]?.toInt()
             val match = pending[key]
             if (match != null) {
                 val pair = if (isResponseMTI(mti)) EntryPair(match, e) else EntryPair(e, match)

@@ -5,6 +5,7 @@ import kotlin.test.assertEquals
 import org.hamcrest.MatcherAssert.assertThat;
 import org.hamcrest.Matchers.hasItem;
 import org.joda.time.DateTime
+import org.hamcrest.Matchers.`is`
 
 class LogEntryTest: Spek() {{
 
@@ -88,6 +89,21 @@ class LogEntryTest: Spek() {{
             it("matches by two fields") {
                 val filtered = list.filter(setOf("2" to "pan1", "41" to "1"))
                 assertEquals(listOf(entry1, entry3), filtered)
+            }
+        }
+    }
+
+    given("a request response pair") {
+        val advice = entry("0" to "0820", "11" to "1")
+        val response = entry("0" to "0830", "11" to "000001")
+        val list = listOf(
+                advice,
+                response
+        )
+        on("matching request to response") {
+            it("should treat stan as a zero padding integer") {
+                val pairing = list.pairRequestWithResponse()
+                assertThat(pairing, hasItem(EntryPair(advice, response)))
             }
         }
     }
